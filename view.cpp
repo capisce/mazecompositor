@@ -1444,7 +1444,7 @@ void View::keyReleaseEvent(QKeyEvent *event)
     } else if (!event->isAutoRepeat()) {
         handleKey(event->key(), false);
 
-        bool active = !qFuzzyIsNull(m_strafingVelocity) || !qFuzzyIsNull(m_walkingVelocity) || !qFuzzyIsNull(m_pitchSpeed) || !qFuzzyIsNull(m_turningSpeed) || m_jumping || m_mouseLook || m_dragItem;
+        bool active = !qFuzzyIsNull(m_strafingVelocity) || !qFuzzyIsNull(m_walkingVelocity) || !qFuzzyIsNull(m_pitchSpeed) || !qFuzzyIsNull(m_turningSpeed) || m_jumping || m_mouseLook || m_dragItem || m_camera.pos().y() > 0;
 
         if (!m_animationTimer->isSingleShot() && !active) {
             m_animationTimer->setSingleShot(true);
