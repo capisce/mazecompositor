@@ -131,7 +131,7 @@ void Camera::updateMatrix() const
     float m33 = -(zn + zf) / (zf - zn);
     float m34 = -(2 * zn * zf) / (zf - zn);
 
-    qreal data[] =
+    float data[] =
     {
         1.0, 0.0, 0, 0,
         0, fov, 0, 0,

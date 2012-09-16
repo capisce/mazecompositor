@@ -132,7 +132,7 @@ View::View(const QRect &geometry)
 
     generateScene();
 
-    m_gl.initializeGLFunctions();
+    m_gl.initializeOpenGLFunctions();
 
     QByteArray vsrc =
         "attribute highp vec4 vertex;\n"
