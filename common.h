@@ -36,7 +36,7 @@ void drawTexture(const QRectF &target, const QSizeF &viewport, GLuint texture, q
 void drawRect(const QRectF &target, const QSizeF &viewport, const QColor &color, GLdouble z = 0.0);
 void drawConvexSolid(const Camera &camera, const QVector<QVector3D> &outline, const QColor &color);
 
-GLuint generateTexture(const QImage &image, bool mipmaps = true);
+GLuint generateTexture(const QImage &image, bool mipmaps = true, bool repeat = true);
 void updateSubImage(GLuint texture, const QImage &image, const QRect &rect, bool mipmaps = true);
 
 QOpenGLShaderProgram *generateShaderProgram(QObject *parent, QByteArray vsrc, QByteArray fsrc);
@@ -53,6 +53,8 @@ enum TileType
 
 QVector<QVector3D> tile(int x, int z, TileType type, QVector3D scale = QVector3D(1, 1, 1), QVector3D dim = QVector3D(1, 1, 1));
 
+bool canUseMipmaps(const QSize &size);
 bool useSimpleShading();
+bool fpsDebug();
 
 #endif

@@ -69,7 +69,7 @@ void Light::initialize(QObject *parent)
         "uniform mediump mat4 matrix;\n"
         "void main(void)\n"
         "{\n"
-        "    vec4 pos = vertexAttr + offset;\n"
+        "    highp vec4 pos = vertexAttr + offset;\n"
         "    gl_Position = matrix * pos;\n"
         "}\n";
 

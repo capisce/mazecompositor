@@ -193,6 +193,6 @@ void Entity::initialize()
     m_tileWidth = w;
     m_tileHeight = h;
 
-    m_texture = generateTexture(image, false);
+    m_texture = generateTexture(image, false, false);
     m_textureSize = image.size();
 }

@@ -46,6 +46,9 @@
 
 static void frameRendered()
 {
+    if (!fpsDebug())
+        return;
+
     static int frameCount = 0;
     static QTime lastTime = QTime::currentTime();
 
@@ -70,8 +73,8 @@ QSurfaceFormat createFormat()
 {
     QSurfaceFormat format;
     format.setSamples(4);
-    format.setDepthBufferSize(24);
-    format.setStencilBufferSize(8);
+    format.setDepthBufferSize(16);
+    format.setStencilBufferSize(1);
     return format;
 }
 
@@ -159,18 +162,18 @@ View::View(const QRect &geometry)
             "uniform highp vec3 lights[NUM_LIGHTS];\n"
             "uniform highp vec3 eye;\n"
             "varying mediump vec2 t;\n"
-            "varying float light;\n"
+            "varying highp float light;\n"
             "void main(void)\n"
             "{\n"
-            "    vec3 tex = texture2D(texture, t).rgb;\n"
-            "    vec3 normal = normalize(n);\n"
-            "    float diffuseCoeff = 0.0;\n"
+            "    lowp vec3 tex = texture2D(texture, t).rgb;\n"
+            "    highp vec3 normal = normalize(n);\n"
+            "    highp float diffuseCoeff = 0.0;\n"
             "    for (int i = 0; i < NUM_LIGHTS; ++i) {\n"
-            "        vec3 toLight = lights[i] - p;\n"
-            "        float toLightSqr = dot(toLight, toLight);\n"
-            "        float lightDistanceInv = 1.0 / sqrt(toLightSqr);\n"
-            "        vec3 toLightN = toLight * lightDistanceInv;\n"
-            "        float normalDotLight = dot(toLightN, normal);\n"
+            "        highp vec3 toLight = lights[i] - p;\n"
+            "        highp float toLightSqr = dot(toLight, toLight);\n"
+            "        highp float lightDistanceInv = 1.0 / sqrt(toLightSqr);\n"
+            "        highp vec3 toLightN = toLight * lightDistanceInv;\n"
+            "        highp float normalDotLight = dot(toLightN, normal);\n"
             "        if (i < numLights)\n"
             "            diffuseCoeff += max(normalDotLight, 0.0) / max(1.5, toLightSqr);\n"
             "    }\n"
@@ -184,23 +187,23 @@ View::View(const QRect &geometry)
             "uniform highp vec3 lights[NUM_LIGHTS];\n"
             "uniform highp vec3 eye;\n"
             "varying mediump vec2 t;\n"
-            "varying float light;\n"
+            "varying highp float light;\n"
             "void main(void)\n"
             "{\n"
-            "    vec3 tex = texture2D(texture, t).rgb;\n"
-            "    vec3 normal = normalize(n);\n"
-            "    vec3 viewN = normalize(p - eye);\n"
-            "    float specularFactor = pow(2.0, 10.0 * tex.r);\n"
-            "    float specular = 0.0;\n"
-            "    float diffuseCoeff = 0.0;\n"
+            "    lowp vec3 tex = texture2D(texture, t).rgb;\n"
+            "    highp vec3 normal = normalize(n);\n"
+            "    highp vec3 viewN = normalize(p - eye);\n"
+            "    highp float specularFactor = pow(2.0, 10.0 * tex.r);\n"
+            "    highp float specular = 0.0;\n"
+            "    highp float diffuseCoeff = 0.0;\n"
             "    for (int i = 0; i < NUM_LIGHTS; ++i) {\n"
-            "        vec3 toLight = lights[i] - p;\n"
-            "        float toLightSqr = dot(toLight, toLight);\n"
-            "        float lightDistanceInv = 1.0 / sqrt(toLightSqr);\n"
-            "        vec3 toLightN = toLight * lightDistanceInv;\n"
-            "        float normalDotLight = dot(toLightN, normal);\n"
-            "        float reflectionDotView = max(0.0, dot(reflect(toLightN, normal), viewN));\n"
-            "        float lightScale = min(1.0, lightDistanceInv);\n"
+            "        highp vec3 toLight = lights[i] - p;\n"
+            "        highp float toLightSqr = dot(toLight, toLight);\n"
+            "        highp float lightDistanceInv = 1.0 / sqrt(toLightSqr);\n"
+            "        highp vec3 toLightN = toLight * lightDistanceInv;\n"
+            "        highp float normalDotLight = dot(toLightN, normal);\n"
+            "        highp float reflectionDotView = max(0.0, dot(reflect(toLightN, normal), viewN));\n"
+            "        highp float lightScale = min(1.0, lightDistanceInv);\n"
             "        if (i < numLights) {\n"
             "            diffuseCoeff += max(normalDotLight, 0.0) / max(1.5, toLightSqr);\n"
             "            specular += pow(reflectionDotView, specularFactor) * lightScale;\n"
@@ -1121,7 +1124,6 @@ void View::handleTouchBegin(QTouchEvent *event)
     if (m_fullscreen) {
         QPointF relative(primaryPos.x() * m_focus->surface()->size().width() / qreal(width()), primaryPos.y() * m_focus->surface()->size().height() / qreal(height()));
         m_input->sendMousePressEvent(Qt::LeftButton, relative);
-        qDebug() << "sending mouse press event" << relative;
         return;
     }
 
@@ -1140,7 +1142,6 @@ void View::handleTouchBegin(QTouchEvent *event)
             m_mousePos = primaryPos;
             m_dragItemDelta = QPoint();
             m_dragAccepted = false;
-            printf("acquired drag item: %d, %d\n", m_mousePos.x(), m_mousePos.y());
             m_animationTimer->start();
             return;
         }
@@ -1224,6 +1225,7 @@ void View::handleCamera(QTouchEvent *event)
     int touchCount = points.size();
     for (int i = 0; i < touchCount; ++i) {
         int id = points.at(i).id();
+
         QPoint pos = points.at(i).pos().toPoint();
         Qt::TouchPointState state = points.at(i).state();
         if (state == Qt::TouchPointPressed) {
@@ -1334,7 +1336,6 @@ void View::handleTouchEnd(QTouchEvent *event)
 
     if (m_dragItem) {
         updateDrag(primaryPos);
-        printf("releasing drag item\n");
         m_dragItem = 0;
         m_focus = 0;
         return;
@@ -1366,12 +1367,11 @@ void View::handleTouchEnd(QTouchEvent *event)
     if (m_focusTimer->isActive()) {
         startFocus();
 	m_fullscreenTimer->start();
-    } else if (m_focus && m_fullscreenTimer->isActive()) {
+    } else if (0 && m_focus && m_fullscreenTimer->isActive()) {
         m_fullscreen = true;
         m_animationTimer->setSingleShot(true);
         m_animationTimer->start();
     } else {
-        printf("sending mouse release event: %d %d\n", m_mousePos.x(), m_mousePos.y());
         m_input->sendMouseReleaseEvent(Qt::LeftButton, m_mousePos);
     }
 }
@@ -1414,7 +1414,6 @@ void View::handleTouchUpdate(QTouchEvent *event)
         return;
     }
 
-    printf("sending mouse move event: %d %d\n", local.toPoint().x(), local.toPoint().y());
     m_input->sendMouseMoveEvent(local.toPoint());
 }
 
@@ -1431,8 +1430,6 @@ void View::keyPressEvent(QKeyEvent *event)
             m_simulationTime = m_time.elapsed();
             m_animationTimer->setSingleShot(false);
             m_animationTimer->start();
-
-            printf("starting animation timer\n");
         }
     }
 }
@@ -1446,10 +1443,8 @@ void View::keyReleaseEvent(QKeyEvent *event)
 
         bool active = !qFuzzyIsNull(m_strafingVelocity) || !qFuzzyIsNull(m_walkingVelocity) || !qFuzzyIsNull(m_pitchSpeed) || !qFuzzyIsNull(m_turningSpeed) || m_jumping || m_mouseLook || m_dragItem || m_camera.pos().y() > 0;
 
-        if (!m_animationTimer->isSingleShot() && !active) {
+        if (!m_animationTimer->isSingleShot() && !active)
             m_animationTimer->setSingleShot(true);
-            printf("stopping animation timer\n");
-        }
    }
 }
 

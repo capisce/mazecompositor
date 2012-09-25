@@ -216,8 +216,32 @@ void drawTexture(const QRectF &target, const QSizeF &viewport, GLuint texture, q
     program->disableAttributeArray(texCoordAttr);
 }
 
-GLuint generateTexture(const QImage &image, bool mipmaps)
+int isPowerOfTwo (unsigned int x)
 {
+      return !(x & (x - 1));
+}
+
+bool canUseMipmaps(const QSize &size)
+{
+    static bool initialized = false;
+    static bool supportsNonPowerOfTwoMipmaps = true;
+    if (!initialized) {
+        printf("VENDOR string: %s\n", glGetString(GL_VENDOR));
+        printf("RENDERER string: %s\n", glGetString(GL_RENDERER));
+
+        supportsNonPowerOfTwoMipmaps = !QByteArray(reinterpret_cast<const char *>(glGetString(GL_RENDERER))).contains("Tegra 3");
+        initialized = true;
+
+        printf("Supports non-power-of-two mipmaps: %d\n", int(supportsNonPowerOfTwoMipmaps));
+    }
+
+    return supportsNonPowerOfTwoMipmaps || (isPowerOfTwo(size.width()) && isPowerOfTwo(size.height()));
+}
+
+GLuint generateTexture(const QImage &image, bool mipmaps, bool repeat)
+{
+    mipmaps = mipmaps && canUseMipmaps(image.size());
+
     GLuint id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -233,14 +257,16 @@ GLuint generateTexture(const QImage &image, bool mipmaps)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
 
     return id;
 }
 
 void updateSubImage(GLuint texture, const QImage &image, const QRect &rect, bool mipmaps)
 {
+    mipmaps = mipmaps && canUseMipmaps(image.size());
+
     QVector<uchar> data;
     for (int i = rect.y(); i <= rect.bottom(); ++i) {
         QRgb *p = (QRgb *)image.scanLine(i);
@@ -342,5 +368,16 @@ bool useSimpleShading()
         initialized = true;
     }
     return simple;
+}
+
+bool fpsDebug()
+{
+    static bool initialized = false;
+    static bool fpsDebug = false;
+    if (!initialized) {
+        fpsDebug = QCoreApplication::arguments().contains(QLatin1String("--show-fps"));
+        initialized = true;
+    }
+    return fpsDebug;
 }
 

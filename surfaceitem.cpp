@@ -57,6 +57,8 @@ SurfaceItem::SurfaceItem(WaylandSurface *surface)
     connect(surface, SIGNAL(damaged(const QRect &)), this, SLOT(surfaceDamaged(const QRect &)));
     connect(surface, SIGNAL(sizeChanged()), this, SLOT(sizeChanged()));
     m_dirty = QRect(QPoint(), surface->size());
+
+    qDebug() << "surface size:" << surface->size();
     m_opacityAnimation = new QPropertyAnimation(this, "opacity");
     m_opacityAnimation->setDuration(400);
     sizeChanged();
@@ -107,7 +109,7 @@ void SurfaceItem::initialize(const Map &map, QObject *parent)
             "uniform lowp float focusColor;\n"
             "void main(void)\n"
             "{\n"
-            "    vec4 tex = texture2D(texture, texCoord);\n"
+            "    lowp vec4 tex = texture2D(texture, texCoord);\n"
             "    gl_FragColor = tex * 0.9 * focusColor * tex.a;\n"
             "}\n"
         :
@@ -122,22 +124,22 @@ void SurfaceItem::initialize(const Map &map, QObject *parent)
             "uniform lowp float focusColor;\n"
             "void main(void)\n"
             "{\n"
-            "    vec4 tex = texture2D(texture, texCoord);\n"
-            "    vec2 dt = abs(texCoord - vec2(0.5));\n"
-            "    vec3 toEyeN = normalize(eye - p);\n"
-            "    vec4 result = tex * 0.9;\n" // light source
+            "    highp vec4 tex = texture2D(texture, texCoord);\n"
+            "    highp vec2 dt = abs(texCoord - vec2(0.5));\n"
+            "    highp vec3 toEyeN = normalize(eye - p);\n"
+            "    highp vec4 result = tex * 0.9;\n" // light source
             "    for (int i = 0; i < NUM_LIGHTS; ++i) {\n"
-            "        vec3 toLight = lights[i] - p;\n"
-            "        vec3 toLightN = normalize(toLight);\n"
-            "        float normalDotLight = dot(toLightN, normal);\n"
-            "        float lightDistance = length(toLight);\n"
-            "        float reflectionDotView = max(0.0, dot(normalize(((2.0 * normal) * normalDotLight) - toLightN), toEyeN));\n"
-            "        vec3 specular = 0.5 * vec3(0.75 * pow(reflectionDotView, 8.0) / max(1.5, 0.8 * lightDistance));\n"
+            "        highp vec3 toLight = lights[i] - p;\n"
+            "        highp vec3 toLightN = normalize(toLight);\n"
+            "        highp float normalDotLight = dot(toLightN, normal);\n"
+            "        highp float lightDistance = length(toLight);\n"
+            "        highp float reflectionDotView = max(0.0, dot(normalize(((2.0 * normal) * normalDotLight) - toLightN), toEyeN));\n"
+            "        highp vec3 specular = 0.5 * vec3(0.75 * pow(reflectionDotView, 8.0) / max(1.5, 0.8 * lightDistance));\n"
             "        if (i < numLights)\n"
             "            result += vec4(specular, 1.0);\n"
             "    }\n"
-            "    vec4 blend = mix(vec4(0.0), result * tex.a, (1.0 - smoothstep(0.5 - pixelSize.x, 0.5, dt.x)) * (1.0 - smoothstep(0.5 - pixelSize.y, 0.5, dt.y)));\n"
-            "    gl_FragColor = min(blend, vec4(1.0)) * focusColor;\n"
+            "    highp vec4 blend = mix(vec4(0.0), result * tex.a, (1.0 - smoothstep(0.5 - pixelSize.x, 0.5, dt.x)) * (1.0 - smoothstep(0.5 - pixelSize.y, 0.5, dt.y)));\n"
+            "    gl_FragColor = mix(min(blend, vec4(1.0)) * focusColor, tex, focusColor);\n"
             "}\n";
 
     fsrc.replace("NUM_LIGHTS", QByteArray::number(map.maxLights()));
@@ -218,7 +220,7 @@ uint SurfaceItem::textureId() const
         if (m_textureSize != image.size()) {
             if (!m_textureSize.isNull())
                 glDeleteTextures(1, &m_textureId);
-            const_cast<SurfaceItem *>(this)->m_textureId = generateTexture(image, true);
+            const_cast<SurfaceItem *>(this)->m_textureId = generateTexture(image, true, false);
             const_cast<SurfaceItem *>(this)->m_textureSize = image.size();
         } else if (!m_dirty.isNull()) {
             updateSubImage(m_textureId, image, m_dirty, true);
@@ -227,7 +229,7 @@ uint SurfaceItem::textureId() const
         id = m_textureId;
     }
 
-    if (m_mipmap) {
+    if (m_mipmap && canUseMipmaps(m_textureSize)) {
         glBindTexture(GL_TEXTURE_2D, id);
         ctx->functions()->glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
