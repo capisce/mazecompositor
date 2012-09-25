@@ -131,15 +131,11 @@ void Camera::updateMatrix() const
     float m33 = -(zn + zf) / (zf - zn);
     float m34 = -(2 * zn * zf) / (zf - zn);
 
-    float data[] =
-    {
+    m_projectionMatrix = QMatrix4x4(
         1.0, 0.0, 0, 0,
         0, fov, 0, 0,
         0, 0, m33, m34,
-        0, 0, -1, 0
-    };
-
-    m_projectionMatrix = QMatrix4x4(data);
+        0, 0, -1, 0);
 
     // Technique from "Oblique View Frustum Depth Projection and Clipping" by Eric Lengyel
 
