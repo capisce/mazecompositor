@@ -28,7 +28,7 @@
 #include "mesh.h"
 #include "surfaceitem.h"
 
-#include "waylandinput.h"
+#include "qwaylandinput.h"
 
 #include <QGuiApplication>
 #include <QKeyEvent>
@@ -83,7 +83,7 @@ QOpenGLWindow::QOpenGLWindow(const QRect &geometry)
     setSurfaceType(QWindow::OpenGLSurface);
     setGeometry(geometry);
     setFormat(createFormat());
-    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
+    setFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
     create();
 
     m_context = new QOpenGLContext(this);
@@ -98,7 +98,7 @@ QOpenGLContext *QOpenGLWindow::context() const
 
 View::View(const QRect &geometry)
     : QOpenGLWindow(geometry)
-    , WaylandCompositor(this)
+    , QWaylandCompositor(this)
     , m_walkingVelocity(0)
     , m_strafingVelocity(0)
     , m_turningSpeed(0)
@@ -408,7 +408,7 @@ View::~View()
 
 void View::surfaceDestroyed(QObject *object)
 {
-    WaylandSurface *surface = static_cast<WaylandSurface *>(object);
+    QWaylandSurface *surface = static_cast<QWaylandSurface *>(object);
 
     SurfaceHash::iterator it = m_surfaces.find(surface);
     if (it == m_surfaces.end())
@@ -432,7 +432,7 @@ void View::surfaceDestroyed(QObject *object)
 
 void View::surfaceDamaged(const QRect &)
 {
-    WaylandSurface *surface = qobject_cast<WaylandSurface *>(sender());
+    QWaylandSurface *surface = qobject_cast<QWaylandSurface *>(sender());
     if (!m_surfaces.contains(surface)) {
         SurfaceItem *item = new SurfaceItem(surface);
         m_surfaces.insert(surface, item);
@@ -445,7 +445,7 @@ void View::surfaceDamaged(const QRect &)
     m_animationTimer->start();
 }
 
-void View::surfaceCreated(WaylandSurface *surface)
+void View::surfaceCreated(QWaylandSurface *surface)
 {
     connect(surface, SIGNAL(destroyed(QObject *)), this, SLOT(surfaceDestroyed(QObject *)));
     connect(surface, SIGNAL(damaged(const QRect &)), this, SLOT(surfaceDamaged(const QRect &)));
@@ -587,7 +587,7 @@ void View::render()
         drawTexture(QRectF(0, 0, width(), height()), viewport, m_focus->textureId(), 1.0);
 
         m_context->swapBuffers(this);
-        WaylandCompositor::frameFinished(m_focus->surface());
+        QWaylandCompositor::frameFinished(m_focus->surface());
 
         frameRendered();
 
@@ -715,7 +715,7 @@ void View::render()
     glDisable(GL_BLEND);
 
     m_context->swapBuffers(this);
-    WaylandCompositor::frameFinished();
+    QWaylandCompositor::frameFinished();
 
     frameRendered();
 }

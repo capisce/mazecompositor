@@ -33,7 +33,7 @@
 
 class Camera;
 class Map;
-class WaylandSurface;
+class QWaylandSurface;
 
 class QOpenGLShaderProgram;
 
@@ -42,12 +42,12 @@ class SurfaceItem : public QObject
     Q_OBJECT
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged)
 public:
-    SurfaceItem(WaylandSurface *surface);
+    SurfaceItem(QWaylandSurface *surface);
     ~SurfaceItem();
 
     QVector<QVector3D> vertices() const;
 
-    WaylandSurface *surface() const
+    QWaylandSurface *surface() const
     {
         return m_surface;
     }
@@ -83,7 +83,7 @@ signals:
     void opacityChanged();
 
 private:
-    WaylandSurface *m_surface;
+    QWaylandSurface *m_surface;
 
     QVector3D m_pos;
     QVector3D m_normal;

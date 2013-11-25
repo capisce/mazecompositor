@@ -25,7 +25,7 @@
 #include "camera.h"
 #include "common.h"
 #include "map.h"
-#include "waylandsurface.h"
+#include "qwaylandsurface.h"
 
 #include <QGuiApplication>
 #include <QPainter>
@@ -44,7 +44,7 @@ uint SurfaceItem::m_normalUniform = 0;
 uint SurfaceItem::m_lightsUniform = 0;
 uint SurfaceItem::m_numLightsUniform = 0;
 
-SurfaceItem::SurfaceItem(WaylandSurface *surface)
+SurfaceItem::SurfaceItem(QWaylandSurface *surface)
     : m_surface(surface)
     , m_depthOffset(0)
     , m_opacity(0.55)
@@ -213,7 +213,7 @@ uint SurfaceItem::textureId() const
 {
     uint id = 0;
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
-    if (m_surface->type() == WaylandSurface::Texture) {
+    if (m_surface->type() == QWaylandSurface::Texture) {
         id = m_surface->texture(ctx);
     } else {
         QImage image = m_surface->image();
