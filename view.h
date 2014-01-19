@@ -37,8 +37,8 @@
 #include "camera.h"
 #include "map.h"
 
-#include "waylandcompositor.h"
-#include "waylandsurface.h"
+#include "qwaylandcompositor.h"
+#include "qwaylandsurface.h"
 
 class Entity;
 class Light;
@@ -55,7 +55,7 @@ private:
     QOpenGLContext *m_context;
 };
 
-class View : public QOpenGLWindow, public WaylandCompositor
+class View : public QOpenGLWindow, public QWaylandCompositor
 {
     Q_OBJECT
 public:
@@ -71,7 +71,7 @@ private slots:
     void surfaceDamaged(const QRect &rect);
 
 protected:
-    void surfaceCreated(WaylandSurface *surface);
+    void surfaceCreated(QWaylandSurface *surface);
 
 private:
     void resizeEvent(QResizeEvent *event);
@@ -174,14 +174,14 @@ private:
 
     QTime m_time;
 
-    typedef QHash<WaylandSurface *, SurfaceItem *> SurfaceHash;
+    typedef QHash<QWaylandSurface *, SurfaceItem *> SurfaceHash;
     SurfaceHash m_surfaces;
 
     QList<SurfaceItem *> m_mappedSurfaces;
     QList<SurfaceItem *> m_dockedSurfaces;
 
     Map m_map;
-    WaylandInputDevice *m_input;
+    QWaylandInputDevice *m_input;
     SurfaceItem *m_focus;
     QVector2D m_resizeGrip;
     QPolygonF m_portalPoly;
